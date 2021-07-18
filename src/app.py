@@ -29,6 +29,16 @@ def issue():
     blockchain.validate_next_block(source, Block(**block))
     return "", 200
 
+@app.route("/network")
+def network():
+    """
+    Displays all the known nodes in the network.
+    """
+    return jsonify(list(network.network))
+
+@app.route("/chain", methods=["GET"])
+    """
+
 # Initiate block mining in a separate thread.
 threading.Thread(target=blockchain.mine, kwargs={"debug": True}).start()
 
