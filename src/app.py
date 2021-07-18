@@ -36,9 +36,6 @@ def network():
     """
     return jsonify(list(network.network))
 
-@app.route("/chain", methods=["GET"])
-    """
-
 # Initiate block mining in a separate thread.
 threading.Thread(target=blockchain.mine, kwargs={"debug": True}).start()
 

@@ -1,6 +1,6 @@
 # Utilities for managing known nodes in the network (e.g., broadcasting blocks, querying nodes, etc.).
 
-from typing import Set
+from typing import List
 
 import requests
 
@@ -33,12 +33,14 @@ class Node():
         "Issues the provided block to the node."
         requests.post(f"{self.url}/issue", json={"source": {"host": hostname, "port": port}, "block": block.__dict__})
     
-    def request_network(self) -> Set["Node"]:
+    def request_network(self) -> List["Node"]:
         "Requests all known nodes in the network from this node."
         response = requests.get(f"{self.url}/network")
-        return {Node(**node) for node in response.json()}
+        network = [Node(**node) for node in response.json()]
+        network.append({"hostname": self.hostname, "port": self.port}) # Add the queried node to the network.
+        network.remove(cfg["endpoint"]) # Remove ourselves from the network.
 
-network: Set[Node] = set()
+network: List[Node] = cfg["network"]
 
 def broadcast(block: Block):
     "Broadcasts the provided block to all nodes in the network."
