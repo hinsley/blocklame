@@ -1,13 +1,14 @@
 # Utilities for managing known nodes in the network (e.g., broadcasting blocks, querying nodes, etc.).
 
-from typing import List
+from typing import Dict, List, Union
 
 import requests
 
+import config
 from config import cfg
 from block import Block
 
-# TODO: Add a way to find other nodes in the network.
+Endpoint = Dict[str, Union[str, int]]
 
 hostname: str = cfg["endpoint"]["hostname"]
 port: int = cfg["endpoint"]["port"]
@@ -35,15 +36,32 @@ class Node():
     
     def request_network(self) -> List["Node"]:
         "Requests all known nodes in the network from this node."
+        # TODO: Add error handling.
         response = requests.get(f"{self.url}/network")
         network = [Node(**node) for node in response.json()]
         network.append({"hostname": self.hostname, "port": self.port}) # Add the queried node to the network.
         network.remove(cfg["endpoint"]) # Remove ourselves from the network.
+        return network
 
-network: List[Node] = cfg["network"]
+network: List[Node] = [Node(**endpoint) for endpoint in cfg["network"]]
 
-def broadcast(block: Block):
+def broadcast(block: Block, exclude: List[Endpoint] = []):
     "Broadcasts the provided block to all nodes in the network."
     for node in network:
-        # TODO: Add error catch for when connection fails.
-        node.issue_block(block)
+        # TODO: Add error handling.
+        if node not in exclude:
+            node.issue_block(block)
+
+def add_node(endpoint: Endpoint):
+    if endpoint not in network:
+        network.append(Node(**endpoint))
+        cfg["network"] = network
+        config.save(cfg)
+
+def absorb_network(node: Node):
+    "Downloads the network known by a particular node and absorbs it into this node's network knowledge."
+    for endpoint in node.request_network():
+        add_node(endpoint)
+
+# Download the network from the first node provided.
+absorb_network(network[0])

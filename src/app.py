@@ -36,9 +36,10 @@ def network():
     """
     return jsonify(list(network.network))
 
+
 # Initiate block mining in a separate thread.
 threading.Thread(target=blockchain.mine, kwargs={"debug": True}).start()
 
 if __name__ == "__main__":
     # Start the Flask app.
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=cfg["endpoint"]["port"])

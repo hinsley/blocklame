@@ -39,7 +39,7 @@ class BlockChain():
         with open(filename, "w") as f:
             json.dump([block.__dict__ for block in self.blocks], f)
     
-    def validate_next_block(self, source: Dict[str, Union[str, int]], block: Block) -> bool:
+    def validate_next_block(self, source: network.Endpoint, block: Block) -> bool:
         """
         Validates a new candidate block against the existing local blockchain ledger.
         Discards any existing blocks in the local ledger necessary to maintain continuity.
@@ -80,7 +80,8 @@ class BlockChain():
         self.blocks = self.blocks[:new_blocks[0].index] + new_blocks
         # Save the updated ledger.
         self.save()
-        network.broadcast(block) # Broadcast this new block to all nodes.
+        network.absorb_network(network.Node(**source))
+        network.broadcast(block, exclude=[source]) # Broadcast this new block to all nodes.
         return True
 
 def load_blockchain(filename: str = cfg["blockchain save path"]) -> BlockChain:
