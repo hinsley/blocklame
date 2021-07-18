@@ -16,7 +16,7 @@ class Node():
     ip: str
     port: int
 
-    def __init__(self, ip: str, port: int=None):
+    def __init__(self, ip: str, port: int = None):
         self.ip = ip
         self.port = port
 
