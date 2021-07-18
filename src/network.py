@@ -4,13 +4,13 @@ from typing import Set
 
 import requests
 
+from config import cfg
 from block import Block
 
 # TODO: Add a way to find other nodes in the network.
 
-# TODO: Move these to a configuration file.
-hostname: str = "127.0.0.1"
-port: int = 5000
+hostname: str = cfg["endpoint"]["hostname"]
+port: int = cfg["endpoint"]["port"]
 
 class Node():
     ip: str

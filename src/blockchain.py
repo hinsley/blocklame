@@ -1,15 +1,20 @@
 from typing import Dict, List, Union
+import json
 from time import time
 
 from block import Block
+from config import cfg
 from mining import mine
 import network
 
 class BlockChain():
     blocks: List[Block]
 
-    def __init__(self):
-        self.blocks = [Block(0, "NULLIUS IN VERBA")]
+    def __init__(self, blocks: List[Block] = None):
+        if blocks is None:
+            self.blocks = [Block(0, "NULLIUS IN VERBA")]
+        else:
+            self.blocks = blocks
         mine(self.blocks[0])
     
     def mine(self, debug=False):
@@ -26,7 +31,13 @@ class BlockChain():
         new_block = Block(len(self.blocks), data, self.blocks[-1].hash())
         mine(new_block)
         self.blocks.append(new_block)
+        self.save()
         network.broadcast(new_block)
+
+    def save(self, filename: str = cfg["blockchain save path"]):
+        "Saves the current blockchain ledger to a JSON file."
+        with open(filename, "w") as f:
+            json.dump([block.__dict__ for block in self.blocks], f)
     
     def validate_next_block(self, source: Dict[str, Union[str, int]], block: Block) -> bool:
         """
@@ -36,6 +47,8 @@ class BlockChain():
         """
         if block.index < len(self.blocks):
             return False # The block originated from an outdated ledger.
+        if block.timestamp > time():
+            return False # The block is from the future.
         
         sender = network.Node(*source)
 
@@ -65,5 +78,19 @@ class BlockChain():
 
         # Update our ledger with all new/revised blocks.
         self.blocks = self.blocks[:new_blocks[0].index] + new_blocks
+        # Save the updated ledger.
+        self.save()
         network.broadcast(block) # Broadcast this new block to all nodes.
         return True
+
+def load_blockchain(filename: str = cfg["blockchain save path"]) -> BlockChain:
+    "Loads a blockchain from a file. If the file does not exist, creates a new blockchain."
+    try:
+        with open(filename, "r") as f:
+            blockchain_json = json.load(f)
+    except FileNotFoundError:
+        return BlockChain() # No ledger exists, so create a new one.
+    blocks = []
+    for block_json in blockchain_json:
+        blocks.append(Block(**block_json))
+    return BlockChain(blocks)

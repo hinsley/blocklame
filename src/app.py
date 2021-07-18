@@ -4,11 +4,11 @@ from flask import Flask, jsonify, request
 import threading
 
 from block import Block
-from blockchain import BlockChain
+from blockchain import BlockChain, load_blockchain
 
 app = Flask(__name__)
 
-blockchain = BlockChain()
+blockchain = load_blockchain()
 
 
 @app.route("/query", methods=["GET"])
